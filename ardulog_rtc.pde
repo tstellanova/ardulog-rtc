@@ -122,6 +122,8 @@ void setup()
     for (uint8_t i = 0; i < SENSOR_COUNT; i++) {
       myFile.print(",sens");myFile.print(i, DEC);    
     }
+    
+    myFile.println("");
   
   }
   else  {
