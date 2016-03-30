@@ -83,8 +83,8 @@ void setup()
   // Default config settings - override with config file "config.txt" if required
   config.baud = 9600;
   config.seconds = 10;  
-  strcpy(config.fileprefix, "UVLOG-");  
-  strcpy(config.filename, "UVLOG-001.CSV");
+  strcpy(config.fileprefix, "DATA-");  
+  strcpy(config.filename, "DATA-001.CSV");
     
   // Note that even if it's not used as the CS pin, the hardware SS pin 
   // (10 on most Arduino boards, 53 on the Mega) must be left as an output 
@@ -110,7 +110,7 @@ void setup()
         // Use default baud
         Serial.begin(9600);      
     }
-    Serial.println("ArduLog..OK");    
+    Serial.println("---- ArduLog OK ----");    
      
     if (openLogFile()) {
       digitalWrite(statusLED, HIGH);  // Logging started 
@@ -120,7 +120,8 @@ void setup()
     logFile.print("time");
 
     for (uint8_t i = 0; i < SENSOR_COUNT; i++) {
-      logFile.print(",sens");logFile.print(i, DEC);    
+      logFile.print(",sens");
+      logFile.print(i, DEC);    
     }
     
     logFile.println("");
@@ -191,13 +192,14 @@ void loop()
       sumData += _raw_sensor_data[ia];
     }
     
-    Serial.print(rtc_datetime);
-    Serial.println("");
     if (0 == sumData) {
       //don't log all-zeroes sensor data to logFile
-      Serial.println("sensors all zero");
+      Serial.println("...");
       return;
     }
+    
+    Serial.print(rtc_datetime);
+    Serial.println("");
    
     if(!digitalRead(CARD_DETECT_PIN))  {
       // Print date/time to file
@@ -219,13 +221,13 @@ bool openLogFile()
 {
     // Search for next log filename
     getNewLogfile();    
+    Serial.print("Opening log file: ");
+    Serial.println(config.filename);
     
     logFile = SD.open(config.filename, FILE_WRITE);
 
     // if the file opened okay, output the name
     if (logFile) {
-      Serial.print("Log file: ");
-      Serial.println(config.filename);
       return true;
     }  
     else {

@@ -108,7 +108,7 @@ void getNewLogfile(void)
     unsigned int minPos, maxPos;
     unsigned int fileNum;
     char filename[20];
-    char fileNumStr[8];
+    char fileNumStr[4];
     File root;
     fileNum = 0;
 
