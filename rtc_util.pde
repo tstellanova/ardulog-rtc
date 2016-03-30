@@ -36,8 +36,9 @@ void readDate(char datetime[]){
   int month = bcdToDec(Wire.read());
   int year = 2000 + bcdToDec(Wire.read());
 
-  //print the date EG  DD/MM/YY HH:MM:SS 
-  sprintf(datetime,"%4.2d%2.2d%2.2d %2.2d:%2.2d:%2.2d", year, month, monthDay, hour, minute, second);
+  // format the date output as YYYY-MM-DD HH:MM:SS 
+  // eg: 2014-08-19 12:41:35.220
+  sprintf(datetime,"%4.2d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d", year, month, monthDay, hour, minute, second);
 
 }
 

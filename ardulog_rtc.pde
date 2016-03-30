@@ -55,7 +55,7 @@ const int statusLED = 5;       // Green Status LED on pin 5
 
 
 uint16_t _raw_sensor_data[SENSOR_COUNT] = {};
-File myFile;
+File logFile;
 
 // Struct to hold config info from config.txt file
 struct {
@@ -83,8 +83,8 @@ void setup()
   // Default config settings - override with config file "config.txt" if required
   config.baud = 9600;
   config.seconds = 10;  
-  strcpy(config.fileprefix, "LOG.");  
-  strcpy(config.filename, "LOG.001");
+  strcpy(config.fileprefix, "UVLOG-");  
+  strcpy(config.filename, "UVLOG-001.CSV");
     
   // Note that even if it's not used as the CS pin, the hardware SS pin 
   // (10 on most Arduino boards, 53 on the Mega) must be left as an output 
@@ -117,13 +117,13 @@ void setup()
     }
     
     // write header
-    myFile.print("time");
+    logFile.print("time");
 
     for (uint8_t i = 0; i < SENSOR_COUNT; i++) {
-      myFile.print(",sens");myFile.print(i, DEC);    
+      logFile.print(",sens");logFile.print(i, DEC);    
     }
     
-    myFile.println("");
+    logFile.println("");
   
   }
   else  {
@@ -185,24 +185,31 @@ void loop()
     readDate(rtc_datetime);
 
     // read sensor data 
+    uint32_t sumData = 0;
     for (uint8_t ia = 0; ia < SENSOR_COUNT; ia++) {
       _raw_sensor_data[ia] = analogRead(ia);
+      sumData += _raw_sensor_data[ia];
     }
     
     Serial.print(rtc_datetime);
-    Serial.println(""); 
+    Serial.println("");
+    if (0 == sumData) {
+      //don't log all-zeroes sensor data to logFile
+      Serial.println("sensors all zero");
+      return;
+    }
    
     if(!digitalRead(CARD_DETECT_PIN))  {
       // Print date/time to file
-      myFile.print(rtc_datetime);
+      logFile.print(rtc_datetime);
       for (uint8_t ia = 0; ia < SENSOR_COUNT; ia++) {
-        myFile.print(',');   
-        myFile.print(_raw_sensor_data[ia]);
+        logFile.print(',');   
+        logFile.print(_raw_sensor_data[ia]);
       }
-      myFile.println("");
+      logFile.println("");
 
-      // Flush data
-      myFile.flush();
+      // Flush to logFile
+      logFile.flush();
     }  
 
    }  
@@ -211,12 +218,12 @@ void loop()
 bool openLogFile()
 {
     // Search for next log filename
-    get_new_logfile();    
+    getNewLogfile();    
     
-    myFile = SD.open(config.filename, FILE_WRITE);
+    logFile = SD.open(config.filename, FILE_WRITE);
 
     // if the file opened okay, output the name
-    if (myFile) {
+    if (logFile) {
       Serial.print("Log file: ");
       Serial.println(config.filename);
       return true;

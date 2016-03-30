@@ -61,108 +61,100 @@ void read_config_file(void)
   File CFile;
   #define LINE_LEN 80
   
-  if (SD.exists("config.txt")) 
-  {
+  if (SD.exists("config.txt"))  {
     CFile = SD.open("config.txt");
   
-    if (CFile) 
-    {   
+    if (CFile)   {   
       // read from the file until there's nothing else in it:
-      while (CFile.available()) 
-      {
-    	inVal = CFile.read();
-        if((inVal=='\r') || (inVal=='\n') || (i>LINE_LEN))
-        {
+      while (CFile.available()) {
+        inVal = CFile.read();
+        if((inVal=='\r') || (inVal=='\n') || (i>LINE_LEN))  {
           // end of line
           configData[i] = '\0';
-          if(i>0)
-          { 
-            if (!strncmp( configData, "BAUD", 4 ))
-            {  
+          if(i>0) { 
+            if (!strncmp( configData, "BAUD", 4 )) {  
               GetParam(configData, param);
               config.baud = (unsigned long) strtoi(param);
             }            
-            if (!strncmp( configData, "FILE", 4 ))
-            {  
+            if (!strncmp( configData, "FILE", 4 )) {  
               GetParam(configData, param);
               strcpy(config.fileprefix, param);
-              strcat(config.fileprefix,".");
             }     
-            if (!strncmp( configData, "SECONDS", 7 ))
-            {  
+            if (!strncmp( configData, "SECONDS", 7 )) {  
               GetParam(configData, param);
               config.seconds = (unsigned long) strtoi(param);
             }             
           }
           i=0;          
         }  
-        else
-        {
+        else {
           configData[i]=inVal;
           i++;
         }  
       }
     } 
-    else 
-    {
-      // file doesn't exist or cant open it
+    else   {
+      // file doesn't exist or can't open it
     }
     // close the file:
     CFile.close();    
   }  
 }
 
-void get_new_logfile(void)
+void getNewLogfile(void)
 {
     // Search for highest value logfile
     unsigned int i,j;
-    unsigned int file_ext;
+    unsigned int minPos, maxPos;
+    unsigned int fileNum;
     char filename[20];
+    char fileNumStr[8];
     File root;
-    file_ext = 0;
+    fileNum = 0;
 
     root = SD.open("/");
     root.rewindDirectory(); // Needed because we have already opened config.txt 
   
     while(true) {
-
         File entry =  root.openNextFile();
         if (!entry) {
            // no more files
            break;
         }
 
-        if (!(entry.isDirectory())) 
-        {
+        if (!(entry.isDirectory()))   {
            // files have sizes, directories do not
            strcpy(filename, entry.name());
            
-           if (!(strncmp(filename, config.fileprefix, strlen(config.fileprefix)))) 
-           {
+           if (!(strncmp(filename, config.fileprefix, strlen(config.fileprefix))))  {
                // It's one of our log files
                // Extract the file extension
                
-               for(i=0;i<strlen(filename);i++)
-               {
-                  if(filename[i]=='.') j=i;
+               for(i=0;i<strlen(filename);i++) {
+                  if (filename[i]=='-') {
+                    minPos=i+1;
+                    break;
+                  }
                }
-               for(i=0;i<strlen(filename)-j;i++)
-               {
-                  filename[i]=filename[j+i+1];
-                  filename[i+1]='\0';
+               maxPos = strlen(filename) - strlen(".CSV");
+               //copy the file number string into fileNumStr
+               for(i=minPos;i<maxPos;i++) {
+                 fileNumStr[i-minPos] = filename[i];
+                 fileNumStr[i-minPos+1] = '\0';
                } 
-               // convert file ext to a number and keep highest. 
-
-               i = strtoi(filename);
-               if(i>file_ext) file_ext=i;
+               
+               // convert fileNumStr to a number and keep highest. 
+               i = strtoi(fileNumStr);
+               if(i>fileNum) {
+                 fileNum=i;
+               }
            }  
-
         }
         entry.close();
     }
     root.close();
     
-    // Set filename to file_ext+1
-    sprintf(config.filename,"%s%03d",config.fileprefix,++file_ext);   
+    // Set filename to fileNum+1
+    sprintf(config.filename,"%s%03d.CSV",config.fileprefix,++fileNum);   
 
 }
